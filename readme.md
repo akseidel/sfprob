@@ -9,9 +9,9 @@ This results in all probate records where the last name is Montoya and the first
 
 ## Requirements
 
-python3
-pip  
-selenium  (The python library for commanding the Chrome web browser)
+* python3
+* pip  
+* selenium  (The python library for commanding the Chrome web browser)
 
 ## Installation
 
