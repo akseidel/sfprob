@@ -1,6 +1,6 @@
 # akseidel 11/27/2023
 import tkinter as tk
-from tkinter import messagebox as mb
+from tkinter import messagebox #as mb
 from typing import NoReturn
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -8,10 +8,7 @@ from selenium.webdriver.common.by import By
 # globals
 party_last_name = 'Montoya'
 party_first_name = 'Emaho'
-party_lfm_name = ''
 firstdistrict_court_nm_caselookup_url = "https://caselookup.nmcourts.gov/caselookup/"
-#santa_fe_county_url = "https://clerktrackweb.santafecountynm.gov/ctweb/login.aspx"
-#santa_fe_county_probate_url = "https://clerktrackweb.santafecountynm.gov/ctweb/prosearch.aspx"
 
 
 def go_to_nmcourts(driver_session):
@@ -29,7 +26,7 @@ def go_to_nmcourts(driver_session):
     print(f'Now at the webpage called: {l_driver_session.title}')
 
     res = captcha_call()
-    if res == True:
+    if res:
         # Setting the object to press the
         # Continue to Case Lookup button
         print('Now attempting to Continue to Case Lookup.')
@@ -37,17 +34,10 @@ def go_to_nmcourts(driver_session):
         accept_button.click()
         l_driver_session.implicitly_wait(0.5)
         print(f'Now at the webpage called: {l_driver_session.title}')
-
     else:
-        print('Quitting')
-        # self.destroy()
-
-
-
-
-    # successfully navigated to post login webpage
-    # successfully entered URL_2
-
+        print(f'Quit was pressed.')
+        driver_session.quit()
+        exit()
 
 def new_mexico_courts_query_field_entry_and_execute(lfm_name, driver_session):
     l_driver_session = driver_session
@@ -65,13 +55,23 @@ def new_mexico_courts_query_field_entry_and_execute(lfm_name, driver_session):
     party_search.click()
 
 
-class ProbeMain(tk.Tk):
+def captcha_call():
+    print(f'Asking to do the captcha and waiting for the OK to continue.')
+    mb = messagebox
+    res = mb.askokcancel(title='First Do The CAPTCHA',
+                         message="Complete the CAPTCHA.\n\nGet the"
+                                 " \"I\'m not a robot\" checkbox to be checked."
+                                 "\n\nThen press this OK.\n\nIgnore the \"Continue to Case Lookup\"."
+                         )
 
+    return res
+
+
+class NMCourtSession(tk.Tk):
     def party_lfm_name(self):
         return " ".join([self.search_name_var.get(), self.search_initial_var.get()])
 
     def do_the_case_lookup(self):
-        lfM_name = self.party_lfm_name()
         print(f'\nStarting a new party search for {self.party_lfm_name()}')
         new_mexico_courts_query_field_entry_and_execute(self.party_lfm_name(), self.driver_session)
         self.bring_forward()
@@ -151,9 +151,6 @@ class ProbeMain(tk.Tk):
                                   )
         self.bts_frame.pack(fill=tk.X, padx=0, pady=2)
 
-
-
-
         self.button_search = tk.Button(self.bts_frame, text="Search Again",
                                        width=80,
                                        command=self.search_again
@@ -170,25 +167,11 @@ class ProbeMain(tk.Tk):
         go_to_nmcourts(self.driver_session)
         self.do_the_case_lookup()
 
+# end NMCourtSession class
 
-
-
-
-
-# end GrpsDrillingMain class
-
-
-def captcha_call():
-    print(f'Asking to do the captcha and waiting for the OK to continue.')
-    res=mb.askokcancel(title='You Must Do The CAPTCHA First',
-                       message="You must complete the CAPTCHA.\nJust get the"
-                               " \"I\'m not a robot\" checkbox to be checked."
-                               "\nThen press this OK. Ignore the \"Continue to Case Lookup\".")
-    return res
 
 def mainloop(args=None):
-    sfprobe_n: ProbeMain = ProbeMain()
-    sfprobe_n.mainloop()
+   courtmain = NMCourtSession()
 
 
 # ====================================== main ================================================
