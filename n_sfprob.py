@@ -90,6 +90,7 @@ class ProbeMain(tk.Tk):
 
     def __init__(self):
         super().__init__()
+        self.driver_session = webdriver.Chrome()
         self.title("Santa Fe County Probate Records Probe")
         w_width = 360
         w_height = 120
@@ -156,7 +157,7 @@ class ProbeMain(tk.Tk):
 # end GrpsDrillingMain class
 
 
-def mainloop(args=None):
+def mainloop():
     sfprobe_n: ProbeMain = ProbeMain()
     sfprobe_n.mainloop()
 

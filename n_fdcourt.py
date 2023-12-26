@@ -1,77 +1,97 @@
 # akseidel 11/27/2023
 import tkinter as tk
+from tkinter import messagebox as mb
 from typing import NoReturn
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
 # globals
-query_last_name = 'Montoya Emaho'
-query_first_name = 'Emaho'
+party_last_name = 'Montoya'
+party_first_name = 'Emaho'
+party_lfm_name = ''
 firstdistrict_court_nm_caselookup_url = "https://caselookup.nmcourts.gov/caselookup/"
 #santa_fe_county_url = "https://clerktrackweb.santafecountynm.gov/ctweb/login.aspx"
 #santa_fe_county_probate_url = "https://clerktrackweb.santafecountynm.gov/ctweb/prosearch.aspx"
 
 
-def login_the_session(driver_session):
+def go_to_nmcourts(driver_session):
     l_driver_session = driver_session
+    print(f'About to navigate to {firstdistrict_court_nm_caselookup_url}')
     l_driver_session.get(firstdistrict_court_nm_caselookup_url)
     l_driver_session.implicitly_wait(0.5)
     print(f'Navigated to {l_driver_session.current_url}')
-    # Setting the object to fill in or press
+
+    # Setting the object to press the accept
+    # New Mexico State Judiciary Case Lookup Disclaimer
     accept_button = l_driver_session.find_element(by=By.ID, value="Submit")
-    # Filling in and pressing login
-    #print('Now attempting to accept.')
+    print('Now attempting to accept.')
     accept_button.click()
     print(f'Now at the webpage called: {l_driver_session.title}')
+
+    res = captcha_call()
+    if res == True:
+        # Setting the object to press the
+        # Continue to Case Lookup button
+        print('Now attempting to Continue to Case Lookup.')
+        accept_button = l_driver_session.find_element(by=By.ID, value="Submit")
+        accept_button.click()
+        l_driver_session.implicitly_wait(0.5)
+        print(f'Now at the webpage called: {l_driver_session.title}')
+
+    else:
+        print('Quitting')
+        # self.destroy()
+
+
+
+
     # successfully navigated to post login webpage
     # successfully entered URL_2
 
 
-def probate_query_field_entry_and_execute(lastname, firstname, driver_session):
+def new_mexico_courts_query_field_entry_and_execute(lfm_name, driver_session):
     l_driver_session = driver_session
-    l_lastname = lastname
-    l_firstname = firstname
-    print('Attempting to navigating to the probate search webpage.')
-    l_driver_session.get(santa_fe_county_probate_url)
     l_driver_session.implicitly_wait(0.5)
-    print('Navigated to', l_driver_session.current_url)
-    text_lastname = l_driver_session.find_element(by=By.ID, value="txtName")
-    text_firstname = l_driver_session.find_element(by=By.ID, value="txtInitial")
-    login_search = l_driver_session.find_element(by=By.ID, value="btnSearch")
+    print(f'Navigated to {l_driver_session.current_url}')
+    l_last_first_middle_name = lfm_name
+    print(f'Plugging in {l_last_first_middle_name}')
+    text_lfm_name = l_driver_session.find_element(by=By.ID, value="partyName")
     # Filling in and pressing search
-    print(f'Issuing a probate search for {l_lastname}, {l_firstname}')
-    text_lastname.clear()
-    text_lastname.send_keys(l_lastname)
-    text_firstname.clear()
-    text_firstname.send_keys(l_firstname)
-    login_search.click()
+    print(f'Entering the party\'s name for search {l_last_first_middle_name}')
+    text_lfm_name.clear()
+    text_lfm_name.send_keys(l_last_first_middle_name)
+    party_search = l_driver_session.find_element(by=By.ID, value="Submit")
+    print(f'Issuing a party name search for {l_last_first_middle_name}')
+    party_search.click()
 
 
 class ProbeMain(tk.Tk):
 
-    def do_search(self):
-        l_lastname = self.search_name_var.get()
-        l_firstname = self.search_initial_var.get()
-        probate_query_field_entry_and_execute(l_lastname, l_firstname, self.driver_session)
+    def party_lfm_name(self):
+        return " ".join([self.search_name_var.get(), self.search_initial_var.get()])
+
+    def do_the_case_lookup(self):
+        lfM_name = self.party_lfm_name()
+        print(f'\nStarting a new party search for {self.party_lfm_name()}')
+        new_mexico_courts_query_field_entry_and_execute(self.party_lfm_name(), self.driver_session)
         self.bring_forward()
 
     def search_again(self) -> NoReturn:
-        l_lastname = self.search_name_var.get()
-        l_firstname = self.search_initial_var.get()
-        print(f'\nStarting a new probate search for {l_lastname}, {l_firstname}')
+        print(f'\nStarting a new party search for {self.party_lfm_name}')
         try:
-            probate_query_field_entry_and_execute(l_lastname, l_firstname, self.driver_session)
+            new_mexico_courts_query_field_entry_and_execute(self.party_lfm_name, self.driver_session)
         except Exception:
             print('')
-            print('Probate probe is starting a new session because the website is not')
+            print('Starting a new session because the website is not')
             print('the expected one or maybe because browser was closed.')
             self.start_fresh_browser_driver()
-            login_the_session(self.driver_session)
-            self.do_search()
+            go_to_nmcourts(self.driver_session)
+            self.do_the_case_lookup()
 
     def start_fresh_browser_driver(self):
         print('\nStarting a fresh browser driver session.')
         self.driver_session = webdriver.Chrome()
+        print('\nStarted a fresh browser driver session.')
 
     def bring_forward(self) -> NoReturn:
         self.attributes('-topmost', True)
@@ -85,7 +105,7 @@ class ProbeMain(tk.Tk):
 
     def __init__(self):
         super().__init__()
-        self.title("Santa Fe County Probate Records Probe")
+        self.title("New Mexico Case Lookup")
         w_width = 360
         w_height = 120
         pos_x = int(self.winfo_screenwidth() / 40 - w_width / 40)
@@ -93,8 +113,8 @@ class ProbeMain(tk.Tk):
         self.geometry("{}x{}+{}+{}".format(w_width, w_height, pos_x, pos_y))
 
         # set the Vars
-        self.search_name_var = tk.StringVar(value=query_last_name)
-        self.search_initial_var = tk.StringVar(value=query_first_name)
+        self.search_name_var = tk.StringVar(value=party_last_name)
+        self.search_initial_var = tk.StringVar(value=party_first_name)
 
         # search frame
         self.search_lastname_frame = tk.Frame(self,
@@ -131,6 +151,9 @@ class ProbeMain(tk.Tk):
                                   )
         self.bts_frame.pack(fill=tk.X, padx=0, pady=2)
 
+
+
+
         self.button_search = tk.Button(self.bts_frame, text="Search Again",
                                        width=80,
                                        command=self.search_again
@@ -144,12 +167,24 @@ class ProbeMain(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self.do_quit)  # assign to closing button [X]
 
         self.start_fresh_browser_driver()
-        login_the_session(self.driver_session)
-        self.do_search()
+        go_to_nmcourts(self.driver_session)
+        self.do_the_case_lookup()
+
+
+
+
 
 
 # end GrpsDrillingMain class
 
+
+def captcha_call():
+    print(f'Asking to do the captcha and waiting for the OK to continue.')
+    res=mb.askokcancel(title='You Must Do The CAPTCHA First',
+                       message="You must complete the CAPTCHA.\nJust get the"
+                               " \"I\'m not a robot\" checkbox to be checked."
+                               "\nThen press this OK. Ignore the \"Continue to Case Lookup\".")
+    return res
 
 def mainloop(args=None):
     sfprobe_n: ProbeMain = ProbeMain()
