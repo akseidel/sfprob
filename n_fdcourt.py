@@ -63,7 +63,6 @@ def captcha_call():
                                  " \"I\'m not a robot\" checkbox to be checked."
                                  "\n\nThen press this OK.\n\nIgnore the \"Continue to Case Lookup\"."
                          )
-
     return res
 
 
