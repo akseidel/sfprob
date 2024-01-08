@@ -11,7 +11,7 @@ party_first_name = 'Emaho'
 firstdistrict_court_nm_caselookup_url = "https://caselookup.nmcourts.gov/caselookup/"
 
 
-def go_to_nmcourts(driver_session):
+def go_to_nmcourts(driver_session, self=None):
     l_driver_session = driver_session
     print(f'About to navigate to {firstdistrict_court_nm_caselookup_url}')
     l_driver_session.get(firstdistrict_court_nm_caselookup_url)
@@ -26,6 +26,7 @@ def go_to_nmcourts(driver_session):
     print(f'Now at the webpage called: {l_driver_session.title}')
 
     res = captcha_call()
+    self.update()
     if res:
         # Setting the object to press the
         # Continue to Case Lookup button
@@ -45,7 +46,11 @@ def new_mexico_courts_query_field_entry_and_execute(lfm_name, driver_session):
     print(f'Navigated to {l_driver_session.current_url}')
     l_last_first_middle_name = lfm_name
     print(f'Plugging in {l_last_first_middle_name}')
-    text_lfm_name = l_driver_session.find_element(by=By.ID, value="partyName")
+    import selenium.common.exceptions
+    try:
+        text_lfm_name = l_driver_session.find_element(by=By.ID, value="partyName")
+    except selenium.common.exceptions.NoSuchElementException:
+        exit()
     # Filling in and pressing search
     print(f'Entering the party\'s name for search {l_last_first_middle_name}')
     text_lfm_name.clear()
@@ -84,13 +89,13 @@ class NMCourtSession(tk.Tk):
             print('Starting a new session because the website is not')
             print('the expected one or maybe because browser was closed.')
             self.start_fresh_browser_driver()
-            go_to_nmcourts(self.driver_session)
+            go_to_nmcourts(self.driver_session, self)
             self.do_the_case_lookup()
 
     def start_fresh_browser_driver(self):
-        print('\nStarting a fresh browser driver session.')
+        print(f'\nStarting a fresh browser driver session.')
         self.driver_session = webdriver.Chrome()
-        print('\nStarted a fresh browser driver session.')
+        print(f'\nStarted a fresh browser driver session.')
 
     def bring_forward(self) -> NoReturn:
         self.attributes('-topmost', True)
@@ -98,7 +103,7 @@ class NMCourtSession(tk.Tk):
         self.attributes('-topmost', False)
 
     def do_quit(self) -> NoReturn:
-        print('... Goodby ...')
+        print(f'... Goodby ...')
         self.driver_session.quit()
         self.destroy()
 
@@ -162,10 +167,12 @@ class NMCourtSession(tk.Tk):
         self.button_quit.pack(padx=8, pady=0)
         self.protocol("WM_DELETE_WINDOW", self.do_quit)  # assign to closing button [X]
 
-        self.start_fresh_browser_driver()
-        go_to_nmcourts(self.driver_session)
-        self.do_the_case_lookup()
 
+        self.start_fresh_browser_driver()
+        self.update()
+        go_to_nmcourts(self.driver_session, self)
+        self.do_the_case_lookup()
+        print(f'... Goodby ...')
 # end NMCourtSession class
 
 
